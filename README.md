@@ -1,6 +1,6 @@
 # State machine library for AppDaemon (Home Assistant)
 
-Define and run a state machine to drive your automation using [AppDaemon](https://appdaemon.readthedocs.io/) with [Home Assistant]().
+Define and run state machines to drive your automations using [AppDaemon](https://appdaemon.readthedocs.io/) with [Home Assistant]().
 
 ## Installation
 
@@ -55,22 +55,29 @@ If both `initial` and `entity` are provided:
 - otherwise, `initial` is used as the initial state.
 
 #### Args
-  `hass`: The app inheriting appdaemon.plugins.hass.hassapi.Hass
-  `states`: Enum with all possible states.
-  `initial`: Initial state of the state machine. Defaults to the first state.
-  `entity`: The entity that will mirror the state machine's state.
+`hass`: The app inheriting appdaemon.plugins.hass.hassapi.Hass
+
+`states`: Enum with all possible states.
+
+`initial`: Initial state of the state machine. Defaults to the first state.
+
+`entity`: The entity that will mirror the state machine's state.
 
 ### Machine.add_transition(from_state, trigger, to_state, on_transition = None):
 Adds a single transition.
 
 #### Args
-  `from_state`: The state from which the transition is made.
-  `trigger`: The trigger causing this transition.
-  `to_state`: Destination state of the transition.
-  `on_transition`: Optional callback to call when performing this transition.
+`from_state`: The state from which the transition is made.
+
+`trigger`: The trigger causing this transition.
+
+`to_state`: Destination state of the transition.
+
+`on_transition`: Optional callback to call when performing this transition.
 
 ### Machine.add_transitions(from_states, triggers, to_state, on_transition = None)
 Adds multiple transitions.
+
 Examples:
 ```python
 # 2 transitions, one from STATE1, one from STATE2.
@@ -86,10 +93,13 @@ machine.add_transitions(
 machine.add_transitions(ANY, IsState('binary_sensor.sensor1'), STATE3)
 ```
 #### Args
-  `from_states`: A single state or a list of states or ANY.
-  `trigger`: A single trigger or multiple triggers.
-  `to_state`: A single destination state of the transition.
-  `on_transition`: Optional callback to call when performing this transition.
+`from_states`: A single state or a list of states or ANY.
+
+`trigger`: A single trigger or multiple triggers.
+
+`to_state`: A single destination state of the transition.
+
+`on_transition`: Optional callback to call when performing this transition.
 
 ### Machine.on_transition(callback)
 Sets a callback that will be called on each state transition.
@@ -97,7 +107,7 @@ Sets a callback that will be called on each state transition.
 Only one callback can be set. Calls to `on_transition()` overwrite the previously set callback.
 
 #### Args
-  `callback`: function taking 2 arguments: (`from_state`, `to_state`)
+`callback`: function taking 2 arguments: (`from_state`, `to_state`)
 
 ### Machine.get_dot()
 Returns the transition graph in [DOT](https://en.wikipedia.org/wiki/DOT_(graph_description_language)) format.
