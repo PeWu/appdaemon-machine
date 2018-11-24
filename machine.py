@@ -76,6 +76,8 @@ class Machine:
       entity_state = self.hass.get_state(self.state_entity)
       if entity_state in {s.name for s in self.states}:
         self.current_state = self.states[entity_state]
+      # Listen for state changes initiated in Home Assistant.
+      self.hass.listen_state(self._state_callback, self.state_entity)
 
     if not self.current_state:
       self.current_state = initial or list(states)[0]
@@ -89,8 +91,8 @@ class Machine:
     self.watched_entities = set()
     self.on_transition_callback = None
 
-  def _state_callback(self, entity, attribute, old, new, kwargs):
-    """Called on state change of a watched entity."""
+  def _entity_callback(self, entity, attribute, old, new, kwargs):
+    """Called on change of a watched entity."""
 
     for transition in self.state_transitions[self.current_state]:
       if transition.trigger.entity == entity:
@@ -100,6 +102,19 @@ class Machine:
             new != transition.trigger.value)):
           self._perform_transition(transition)
           return
+
+  def _state_callback(self, entity, attribute, old, new, kwargs):
+    """Called on change of the state entity."""
+
+    # If the state name is not recognized, log a warning.
+    if new not in {s.name for s in self.states}:
+      self.hass.log('Unrecognized state: {}'.format(new), level = 'WARNING')
+      return
+    new_state = self.states[new]
+    # No need to do a transition if the state doesn't change.
+    if new_state != self.current_state:
+      self._perform_transition(Transition(
+          to_state = new_state, trigger = None, on_transition = None))
 
   def _timer_callback(self, kwargs):
     """Called by timer."""
@@ -137,7 +152,8 @@ class Machine:
       from_state: The state from which the transition is made.
       trigger: The trigger causing this transition.
       to_state: Destination state of the transition.
-      on_transition: Optional callback to call when performing this transition.
+      on_transition: Optional 0-argument callback to call when performing this
+          transition.
     """
 
     assert from_state != ANY, 'Use add_transitions()'
@@ -159,7 +175,7 @@ class Machine:
       entity = trigger.entity
       if entity not in self.watched_entities:
         self.watched_entities.add(entity)
-        self.hass.listen_state(self._state_callback, entity)
+        self.hass.listen_state(self._entity_callback, entity)
 
     # Add transition based on a timeout trigger.
     if isinstance(trigger, Timeout):
