@@ -178,11 +178,14 @@ class Machine:
         self.hass.listen_state(self._entity_callback, entity)
 
     # Add transition based on a timeout trigger.
-    if isinstance(trigger, Timeout):
+    elif isinstance(trigger, Timeout):
       self.timeout_transitions[from_state] = Transition(
           trigger, to_state, on_transition)
       if from_state == self.current_state:
         self._start_timer()
+
+    else:
+      raise RuntimeError("Triggers must be IsState/IsNotState/Timeout")
 
   def add_transitions(
       self, from_states, triggers, to_state, on_transition = None):
