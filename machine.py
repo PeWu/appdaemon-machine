@@ -122,6 +122,7 @@ class Machine:
   def _timer_callback(self, kwargs):
     """Called by timer."""
 
+    self.timer = None
     transition = self.timeout_transitions[self.current_state]
     self._perform_transition(transition)
 
