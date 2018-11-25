@@ -2,6 +2,8 @@
 
 Define and run state machines to drive your automations using [AppDaemon](https://appdaemon.readthedocs.io/) with [Home Assistant]().
 
+[![Build Status](https://travis-ci.com/PeWu/appdaemon-machine.svg?branch=master)](https://travis-ci.com/PeWu/appdaemon-machine)
+
 ## Installation
 
 1. Clone the appdaemon-machine repository.
