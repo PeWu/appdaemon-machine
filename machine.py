@@ -76,6 +76,9 @@ class Machine:
       entity_state = self.hass.get_state(self.state_entity)
       if entity_state in {s.name for s in self.states}:
         self.current_state = self.states[entity_state]
+      else:
+        self.hass.log(
+            'Unrecognized state: {}'.format(entity_state), level = 'WARNING')
       # Listen for state changes initiated in Home Assistant.
       self.hass.listen_state(self._state_callback, self.state_entity)
 
@@ -166,10 +169,6 @@ class Machine:
 
     # Add transition based on a state trigger.
     if isinstance(trigger, IsState) or isinstance(trigger, IsNotState):
-      # Default entity value is 'on'
-      if not trigger.value:
-        trigger = trigger._replace(value = 'on')
-
       self.state_transitions[from_state].append(
           Transition(trigger, to_state, on_transition))
       entity = trigger.entity

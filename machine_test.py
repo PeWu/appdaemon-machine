@@ -38,6 +38,9 @@ class FakeHass:
         self.current_time + timeout_sec, callback)
     return self.counter
 
+  def log(self, message, level = 'INFO'):
+    pass
+
   def cancel_timer(self, key):
     self.timers.pop(key, None)
 
