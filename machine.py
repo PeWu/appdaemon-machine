@@ -14,12 +14,10 @@ class ANY:
 
 
 # Transition triggers.
-IsState = namedtuple('IsState', ['entity', 'value'])
-IsState.__new__.__defaults__ = ('on',) # Default value = 'on'
-
-IsNotState = namedtuple('IsNotState', ['entity', 'value'])
-IsNotState.__new__.__defaults__ = ('on',) # Default value = 'on'
-
+StateEq = namedtuple('StateEq', ['entity', 'value'])
+StateNeq = namedtuple('StateNeq', ['entity', 'value'])
+StateOn = lambda entity: StateEq(entity, 'on')
+StateOff = lambda entity: StateNeq(entity, 'on')
 Timeout = namedtuple('Timeout', ['timeout_sec'])
 
 
@@ -30,12 +28,12 @@ Transition = namedtuple('Transition', ['trigger', 'to_state', 'on_transition'])
 def trigger_to_string(trigger):
   """Returns a human-readable description of a trigger."""
 
-  if isinstance(trigger, IsState):
+  if isinstance(trigger, StateEq):
     entity = trigger.entity.split('.')[1]
     if trigger.value == 'on':
       return entity
     return '{} == {}'.format(entity, trigger.value)
-  if isinstance(trigger, IsNotState):
+  if isinstance(trigger, StateNeq):
     entity = trigger.entity.split('.')[1]
     if trigger.value == 'on':
       return '!{}'.format(entity)
@@ -99,9 +97,9 @@ class Machine:
 
     for transition in self.state_transitions[self.current_state]:
       if transition.trigger.entity == entity:
-        if ((isinstance(transition.trigger, IsState) and
+        if ((isinstance(transition.trigger, StateEq) and
             new == transition.trigger.value) or
-            (isinstance(transition.trigger, IsNotState) and
+            (isinstance(transition.trigger, StateNeq) and
             new != transition.trigger.value)):
           self._perform_transition(transition)
           return
@@ -169,7 +167,7 @@ class Machine:
     assert not isinstance(trigger, list), 'Use add_transitions()'
 
     # Add transition based on a state trigger.
-    if isinstance(trigger, IsState) or isinstance(trigger, IsNotState):
+    if isinstance(trigger, StateEq) or isinstance(trigger, StateNeq):
       self.state_transitions[from_state].append(
           Transition(trigger, to_state, on_transition))
       entity = trigger.entity
@@ -185,7 +183,7 @@ class Machine:
         self._start_timer()
 
     else:
-      raise RuntimeError("Triggers must be IsState/IsNotState/Timeout")
+      raise RuntimeError("Triggers must be StateEq/StateNeq/Timeout")
 
   def add_transitions(
       self, from_states, triggers, to_state, on_transition = None):

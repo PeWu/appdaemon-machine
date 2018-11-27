@@ -2,7 +2,7 @@
 
 from collections import defaultdict, namedtuple
 from enum import Enum
-from machine import Machine, ANY, IsState, IsNotState, Timeout
+from machine import Machine, ANY, StateEq, StateNeq, StateOn, StateOff, Timeout
 from unittest import main, TestCase
 from unittest.mock import patch, Mock
 
@@ -78,8 +78,8 @@ class MachineTest(TestCase):
     self.assertEqual(machine.current_state, B)
 
   def test_boolean_entity_triggers(self):
-    self.machine.add_transition(A, IsState('sensor.s'), B)
-    self.machine.add_transition(B, IsNotState('sensor.s'), A)
+    self.machine.add_transition(A, StateOn('sensor.s'), B)
+    self.machine.add_transition(B, StateOff('sensor.s'), A)
     self.assertEqual(self.machine.current_state, A)
 
     self.hass.set_state('sensor.s', 'on')
@@ -89,8 +89,8 @@ class MachineTest(TestCase):
     self.assertEqual(self.machine.current_state, A)
 
   def test_valued_entity_triggers(self):
-    self.machine.add_transition(A, IsState('sensor.t', 'value2'), B)
-    self.machine.add_transition(B, IsNotState('sensor.t', 'value2'), A)
+    self.machine.add_transition(A, StateEq('sensor.t', 'value2'), B)
+    self.machine.add_transition(B, StateNeq('sensor.t', 'value2'), A)
 
     self.assertEqual(self.machine.current_state, A)
 
@@ -114,7 +114,7 @@ class MachineTest(TestCase):
     self.assertEqual(self.machine.current_state, A)
 
   def test_transitions_cancels_timeout(self):
-    self.machine.add_transition(A, IsState('sensor.s'), B)
+    self.machine.add_transition(A, StateOn('sensor.s'), B)
     self.machine.add_transitions(A, Timeout(10), C)
 
     self.hass.set_state('sensor.s', 'on')
@@ -124,7 +124,7 @@ class MachineTest(TestCase):
     self.assertEqual(self.machine.current_state, B)
 
   def test_transition_to_self_restarts_timer(self):
-    self.machine.add_transition(A, IsState('sensor.s'), A)
+    self.machine.add_transition(A, StateOn('sensor.s'), A)
     self.machine.add_transitions(A, Timeout(10), B)
 
     self.hass.advance_time(5)
@@ -174,32 +174,32 @@ class MachineTest(TestCase):
   def test_trigger_list(self):
     with patch.object(self.machine, 'add_transition') as add_transition:
       self.machine.add_transitions(
-          A, [IsState('sensor.s'), IsState('sensor.t')], B)
+          A, [StateOn('sensor.s'), StateOn('sensor.t')], B)
 
-    add_transition.assert_any_call(A, IsState('sensor.s'), B, None)
-    add_transition.assert_any_call(A, IsState('sensor.s'), B, None)
+    add_transition.assert_any_call(A, StateOn('sensor.s'), B, None)
+    add_transition.assert_any_call(A, StateOn('sensor.s'), B, None)
     self.assertEqual(add_transition.call_count, 2)
 
   def test_state_and_trigger_list(self):
     with patch.object(self.machine, 'add_transition') as add_transition:
       self.machine.add_transitions(
-          [A, B], [IsState('sensor.s'), IsState('sensor.t')], C)
+          [A, B], [StateOn('sensor.s'), StateOn('sensor.t')], C)
 
-    add_transition.assert_any_call(A, IsState('sensor.s'), C, None)
-    add_transition.assert_any_call(B, IsState('sensor.s'), C, None)
-    add_transition.assert_any_call(A, IsState('sensor.t'), C, None)
-    add_transition.assert_any_call(B, IsState('sensor.t'), C, None)
+    add_transition.assert_any_call(A, StateOn('sensor.s'), C, None)
+    add_transition.assert_any_call(B, StateOn('sensor.s'), C, None)
+    add_transition.assert_any_call(A, StateOn('sensor.t'), C, None)
+    add_transition.assert_any_call(B, StateOn('sensor.t'), C, None)
     self.assertEqual(add_transition.call_count, 4)
 
   def test_one_transition_callback(self):
     callback = Mock()
-    self.machine.add_transition(A, IsState('sensor.s'), B, callback)
+    self.machine.add_transition(A, StateOn('sensor.s'), B, callback)
 
     self.hass.set_state('sensor.s', 'on')
     callback.assert_called_once_with()
 
   def test_any_transition_callback(self):
-    self.machine.add_transition(A, IsState('sensor.s'), B)
+    self.machine.add_transition(A, StateOn('sensor.s'), B)
     callback = Mock()
     self.machine.on_transition(callback)
 

@@ -21,7 +21,7 @@ Simple example:
 ```python
 import appdaemon.plugins.hass.hassapi as hass
 from enum import Enum
-from machine import Machine, ANY, IsState, IsNotState, Timeout
+from machine import Machine, ANY, StateEq, StateNeq, Timeout
 
 class States(Enum):
   HOME = 1
@@ -33,8 +33,8 @@ class Presence(hass.Hass):
   def initialize(self):
     machine = Machine(self, States)
 
-    machine.add_transitions(ANY, IsState('device_tracker.my_phone', 'home'), HOME)
-    machine.add_transition(HOME, IsNotState('device_tracker.my_phone', 'home'), LEAVING)
+    machine.add_transitions(ANY, StateEq('device_tracker.my_phone', 'home'), HOME)
+    machine.add_transition(HOME, StateNeq('device_tracker.my_phone', 'home'), LEAVING)
     machine.add_transition(LEAVING, Timeout(30), AWAY, on_transition = self.on_away)
 
     machine.log_graph_link()
@@ -75,7 +75,7 @@ Adds a single transition.
 
 `to_state`: Destination state of the transition.
 
-`on_transition`: Optional callback to call when performing this transition.
+`on_transition`: Optional 0-argument callback to call when performing this transition.
 
 ### Machine.add_transitions(from_states, triggers, to_state, on_transition = None)
 Adds multiple transitions.
@@ -83,16 +83,16 @@ Adds multiple transitions.
 Examples:
 ```python
 # 2 transitions, one from STATE1, one from STATE2.
-machine.add_transitions([STATE1, STATE2], IsState('binary_sensor.sensor1'), STATE3)
+machine.add_transitions([STATE1, STATE2], StateOn('binary_sensor.sensor1'), STATE3)
 # 2 transitions for 2 different triggers.
-machine.add_transitions(STATE1, [IsState('binary_sensor.sensor1'), Timeout(5)], STATE3)
+machine.add_transitions(STATE1, [StateOn('binary_sensor.sensor1'), Timeout(5)], STATE3)
 # 4 transitions.
 machine.add_transitions(
     [STATE1, STATE2],
-    [IsState('binary_sensor.sensor1'), Timeout(5)],
+    [StateOn('binary_sensor.sensor1'), Timeout(5)],
     STATE3)
 # One transition from each state to STATE3 (including STATE3->STATE3)
-machine.add_transitions(ANY, IsState('binary_sensor.sensor1'), STATE3)
+machine.add_transitions(ANY, StateOn('binary_sensor.sensor1'), STATE3)
 ```
 #### Args
 `from_states`: A single state or a list of states or ANY.
@@ -120,10 +120,10 @@ Logs a link to a visualization of the transition graph.
 ### Triggers
 Example triggers:
 ```python
-IsState('binary_sensor.sensor1')
-IsNotState('binary_sensor.sensor2')
-IsState('device_tracker.device1', 'home')
-IsNotState('device_tracker.device2', 'home')
+StateOn('binary_sensor.sensor1')
+StateOff('binary_sensor.sensor2')
+StateEq('device_tracker.device1', 'home')
+StateNeq('device_tracker.device2', 'home')
 Timeout(10) # seconds
 ```
 
