@@ -2,9 +2,10 @@
 
 from collections import defaultdict, namedtuple
 from enum import Enum
-from machine import Machine, ANY, StateEq, StateNeq, StateOn, StateOff, Timeout
 from unittest import main, TestCase
 from unittest.mock import patch, Mock
+
+from machine import Machine, ANY, StateEq, StateNeq, StateOn, StateOff, Timeout
 
 
 Timer = namedtuple('Timer', ['call_time', 'callback'])
@@ -38,7 +39,7 @@ class FakeHass:
         self.current_time + timeout_sec, callback)
     return self.counter
 
-  def log(self, message, level = 'INFO'):
+  def log(self, message, level='INFO'):
     pass
 
   def cancel_timer(self, key):
@@ -74,7 +75,7 @@ class MachineTest(TestCase):
     self.assertEqual(self.machine.current_state, A)
 
   def test_explicit_initial_state(self):
-    machine = Machine(self.hass, States, initial = B)
+    machine = Machine(self.hass, States, initial=B)
     self.assertEqual(machine.current_state, B)
 
   def test_boolean_entity_triggers(self):
@@ -136,7 +137,7 @@ class MachineTest(TestCase):
     self.assertEqual(self.machine.current_state, B)
 
   def test_state_entity(self):
-    machine = Machine(self.hass, States, entity = 'sensor.state')
+    machine = Machine(self.hass, States, entity='sensor.state')
     machine.add_transition(A, Timeout(10), B)
 
     self.assertEqual(self.hass.get_state('sensor.state'), 'A')
@@ -145,11 +146,11 @@ class MachineTest(TestCase):
 
   def test_initial_state_from_hass(self):
     self.hass.set_state('sensor.state', 'B')
-    machine = Machine(self.hass, States, entity = 'sensor.state')
+    machine = Machine(self.hass, States, entity='sensor.state')
     self.assertEqual(machine.current_state, B)
 
   def test_setting_state_from_hass(self):
-    machine = Machine(self.hass, States, entity = 'sensor.state')
+    machine = Machine(self.hass, States, entity='sensor.state')
     self.assertEqual(machine.current_state, A)
     self.hass.set_state('sensor.state', 'B')
     self.assertEqual(machine.current_state, B)
@@ -208,4 +209,4 @@ class MachineTest(TestCase):
 
 
 if __name__ == '__main__':
-    main()
+  main()

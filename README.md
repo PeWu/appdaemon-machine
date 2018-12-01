@@ -35,7 +35,7 @@ class Presence(hass.Hass):
 
     machine.add_transitions(ANY, StateEq('device_tracker.my_phone', 'home'), HOME)
     machine.add_transition(HOME, StateNeq('device_tracker.my_phone', 'home'), LEAVING)
-    machine.add_transition(LEAVING, Timeout(30), AWAY, on_transition = self.on_away)
+    machine.add_transition(LEAVING, Timeout(30), AWAY, on_transition=self.on_away)
 
     machine.log_graph_link()
 
@@ -48,7 +48,7 @@ The `log_graph_link()` call will log [this link](https://dreampuf.github.io/Grap
 
 ## API
 
-### class **Machine**(hass, states, initial = None, entity = None)
+### class **Machine**(hass, states, initial=None, entity=None)
 Initializes the state machine.
 
 If both `initial` and `entity` are provided:
@@ -65,7 +65,7 @@ If both `initial` and `entity` are provided:
 
 `entity`: The entity that will mirror the state machine's state.
 
-### Machine.add_transition(from_state, trigger, to_state, on_transition = None):
+### Machine.add_transition(from_state, trigger, to_state, on_transition=None):
 Adds a single transition.
 
 #### Args
@@ -77,7 +77,7 @@ Adds a single transition.
 
 `on_transition`: Optional 0-argument callback to call when performing this transition.
 
-### Machine.add_transitions(from_states, triggers, to_state, on_transition = None)
+### Machine.add_transitions(from_states, triggers, to_state, on_transition=None)
 Adds multiple transitions.
 
 Examples:

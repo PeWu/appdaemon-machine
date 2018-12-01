@@ -9,8 +9,7 @@ from urllib.parse import quote
 
 
 # Pass ANY as the from_state to add a transition from all possible states.
-class ANY:
-  pass
+ANY = object()
 
 
 # Transition triggers.
@@ -40,12 +39,13 @@ def trigger_to_string(trigger):
     return '{} != {}'.format(entity, trigger.value)
   if isinstance(trigger, Timeout):
     return 'timeout {} s'.format(trigger.timeout_sec)
+  return 'UNKNOWN'
 
 
 class Machine:
   """State machine implementation for AppDaemon and Home Assistant."""
 
-  def __init__(self, hass, states, initial = None, entity = None):
+  def __init__(self, hass, states, initial=None, entity=None):
     """Initializes the state machine.
 
     If both `initial` and `entity` are provided:
@@ -76,7 +76,7 @@ class Machine:
         self.current_state = self.states[entity_state]
       else:
         self.hass.log(
-            'Unrecognized state: {}'.format(entity_state), level = 'WARNING')
+            'Unrecognized state: {}'.format(entity_state), level='WARNING')
       # Listen for state changes initiated in Home Assistant.
       self.hass.listen_state(self._state_callback, self.state_entity)
 
@@ -84,7 +84,7 @@ class Machine:
       self.current_state = initial or list(states)[0]
 
     if self.state_entity:
-      self.hass.set_state(self.state_entity, state = self.current_state.name)
+      self.hass.set_state(self.state_entity, state=self.current_state.name)
 
     self.timer = None
     self.timeout_transitions = {}
@@ -92,32 +92,34 @@ class Machine:
     self.watched_entities = set()
     self.on_transition_callback = None
 
-  def _entity_callback(self, entity, attribute, old, new, kwargs):
+  def _entity_callback(
+      self, entity, unused_attribute, unused_old, new, unused_kwargs):
     """Called on change of a watched entity."""
 
     for transition in self.state_transitions[self.current_state]:
       if transition.trigger.entity == entity:
         if ((isinstance(transition.trigger, StateEq) and
-            new == transition.trigger.value) or
+             new == transition.trigger.value) or
             (isinstance(transition.trigger, StateNeq) and
-            new != transition.trigger.value)):
+             new != transition.trigger.value)):
           self._perform_transition(transition)
           return
 
-  def _state_callback(self, entity, attribute, old, new, kwargs):
+  def _state_callback(
+      self, unused_entity, unused_attribute, unused_old, new, unused_kwargs):
     """Called on change of the state entity."""
 
     # If the state name is not recognized, log a warning.
     if new not in {s.name for s in self.states}:
-      self.hass.log('Unrecognized state: {}'.format(new), level = 'WARNING')
+      self.hass.log('Unrecognized state: {}'.format(new), level='WARNING')
       return
     new_state = self.states[new]
     # No need to do a transition if the state doesn't change.
     if new_state != self.current_state:
       self._perform_transition(Transition(
-          to_state = new_state, trigger = None, on_transition = None))
+          to_state=new_state, trigger=None, on_transition=None))
 
-  def _timer_callback(self, kwargs):
+  def _timer_callback(self, unused_kwargs):
     """Called by timer."""
 
     self.timer = None
@@ -130,7 +132,7 @@ class Machine:
     from_state = self.current_state
     self.current_state = transition.to_state
     if self.state_entity:
-      self.hass.set_state(self.state_entity, state = self.current_state.name)
+      self.hass.set_state(self.state_entity, state=self.current_state.name)
     self._start_timer()
     if transition.on_transition:
       transition.on_transition()
@@ -147,7 +149,7 @@ class Machine:
           self.timeout_transitions[self.current_state].trigger.timeout_sec)
       self.timer = self.hass.run_in(self._timer_callback, timeout_sec)
 
-  def add_transition(self, from_state, trigger, to_state, on_transition = None):
+  def add_transition(self, from_state, trigger, to_state, on_transition=None):
     """Adds a single transition.
 
     Args:
@@ -167,7 +169,7 @@ class Machine:
     assert not isinstance(trigger, list), 'Use add_transitions()'
 
     # Add transition based on a state trigger.
-    if isinstance(trigger, StateEq) or isinstance(trigger, StateNeq):
+    if isinstance(trigger, [StateEq, StateNeq]):
       self.state_transitions[from_state].append(
           Transition(trigger, to_state, on_transition))
       entity = trigger.entity
@@ -186,7 +188,7 @@ class Machine:
       raise RuntimeError("Triggers must be StateEq/StateNeq/Timeout")
 
   def add_transitions(
-      self, from_states, triggers, to_state, on_transition = None):
+      self, from_states, triggers, to_state, on_transition=None):
     """Adds multiple transitions.
 
     Args:
