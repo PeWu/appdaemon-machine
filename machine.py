@@ -169,7 +169,7 @@ class Machine:
     assert not isinstance(trigger, list), 'Use add_transitions()'
 
     # Add transition based on a state trigger.
-    if isinstance(trigger, [StateEq, StateNeq]):
+    if isinstance(trigger, (StateEq, StateNeq)):
       self.state_transitions[from_state].append(
           Transition(trigger, to_state, on_transition))
       entity = trigger.entity
