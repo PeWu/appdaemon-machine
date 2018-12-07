@@ -207,6 +207,21 @@ class MachineTest(TestCase):
     self.hass.set_state('sensor.s', 'on')
     callback.assert_called_once_with(A, B)
 
+  def test_immediate_transition(self):
+    """If a trigger condition is already met when entering a new state,
+    immediately perform the transition."""
+    self.machine.add_transition(A, StateOn('sensor.s'), B)
+    self.machine.add_transition(B, StateEq('sensor.t', 'value1'), C)
+
+    self.hass.set_state('sensor.s', 'on')
+    self.assertEqual(self.machine.current_state, C)
+
+  def test_initial_immediate_transition(self):
+    """If a trigger condition is already met when entering a new state,
+    immediately perform the transition."""
+    self.machine.add_transition(A, StateOff('sensor.s'), B)
+    self.assertEqual(self.machine.current_state, B)
+
 
 if __name__ == '__main__':
   main()

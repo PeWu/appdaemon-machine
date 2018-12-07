@@ -126,6 +126,18 @@ class Machine:
     transition = self.timeout_transitions[self.current_state]
     self._perform_transition(transition)
 
+  def _should_transition(self, transition):
+    """Test if an immediate transition should happen."""
+    trigger = transition.trigger
+    entity_state = self.hass.get_state(trigger.entity)
+    condition_met = (
+        (isinstance(trigger, StateEq) and
+         entity_state == trigger.value) or
+        (isinstance(trigger, StateNeq) and
+         entity_state != trigger.value))
+    # Do not do immediate self-transitions.
+    return condition_met and self.current_state != transition.to_state
+
   def _perform_transition(self, transition):
     """Performs the given state transition."""
 
@@ -138,6 +150,13 @@ class Machine:
       transition.on_transition()
     if self.on_transition_callback:
       self.on_transition_callback(from_state, self.current_state)
+
+    # Immediately perform another transition if the trigger condition is already
+    # met.
+    for state_transition in self.state_transitions[self.current_state]:
+      if self._should_transition(state_transition):
+        self._perform_transition(state_transition)
+        break
 
   def _start_timer(self):
     """Starts a new timer cancelling an existing one if necessary."""
@@ -170,12 +189,16 @@ class Machine:
 
     # Add transition based on a state trigger.
     if isinstance(trigger, (StateEq, StateNeq)):
-      self.state_transitions[from_state].append(
-          Transition(trigger, to_state, on_transition))
+      transition = Transition(trigger, to_state, on_transition)
+      self.state_transitions[from_state].append(transition)
       entity = trigger.entity
       if entity not in self.watched_entities:
         self.watched_entities.add(entity)
         self.hass.listen_state(self._entity_callback, entity)
+
+      # Immediately perform transition if condition is met.
+      if self._should_transition(transition):
+        self._perform_transition(transition)
 
     # Add transition based on a timeout trigger.
     elif isinstance(trigger, Timeout):
