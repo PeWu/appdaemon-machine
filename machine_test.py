@@ -156,40 +156,44 @@ class MachineTest(TestCase):
     self.assertEqual(machine.current_state, B)
 
   def test_from_any_state(self):
+    trigger = Timeout(1)
     with patch.object(self.machine, 'add_transition') as add_transition:
-      self.machine.add_transitions(ANY, Timeout(1), A)
+      self.machine.add_transitions(ANY, trigger, A)
 
-    add_transition.assert_any_call(A, Timeout(1), A, None)
-    add_transition.assert_any_call(B, Timeout(1), A, None)
-    add_transition.assert_any_call(C, Timeout(1), A, None)
+    add_transition.assert_any_call(A, trigger, A, None)
+    add_transition.assert_any_call(B, trigger, A, None)
+    add_transition.assert_any_call(C, trigger, A, None)
     self.assertEqual(add_transition.call_count, 3)
 
   def test_from_state_list(self):
+    trigger = Timeout(1)
     with patch.object(self.machine, 'add_transition') as add_transition:
-      self.machine.add_transitions([A, B], Timeout(1), C)
+      self.machine.add_transitions([A, B], trigger, C)
 
-    add_transition.assert_any_call(A, Timeout(1), C, None)
-    add_transition.assert_any_call(B, Timeout(1), C, None)
+    add_transition.assert_any_call(A, trigger, C, None)
+    add_transition.assert_any_call(B, trigger, C, None)
     self.assertEqual(add_transition.call_count, 2)
 
   def test_trigger_list(self):
+    trigger1 = StateOn('sensor.s')
+    trigger2 = StateOn('sensor.t')
     with patch.object(self.machine, 'add_transition') as add_transition:
-      self.machine.add_transitions(
-          A, [StateOn('sensor.s'), StateOn('sensor.t')], B)
+      self.machine.add_transitions(A, [trigger1, trigger2], B)
 
-    add_transition.assert_any_call(A, StateOn('sensor.s'), B, None)
-    add_transition.assert_any_call(A, StateOn('sensor.s'), B, None)
+    add_transition.assert_any_call(A, trigger1, B, None)
+    add_transition.assert_any_call(A, trigger2, B, None)
     self.assertEqual(add_transition.call_count, 2)
 
   def test_state_and_trigger_list(self):
+    trigger1 = StateOn('sensor.s')
+    trigger2 = StateOn('sensor.t')
     with patch.object(self.machine, 'add_transition') as add_transition:
-      self.machine.add_transitions(
-          [A, B], [StateOn('sensor.s'), StateOn('sensor.t')], C)
+      self.machine.add_transitions([A, B], [trigger1, trigger2], C)
 
-    add_transition.assert_any_call(A, StateOn('sensor.s'), C, None)
-    add_transition.assert_any_call(B, StateOn('sensor.s'), C, None)
-    add_transition.assert_any_call(A, StateOn('sensor.t'), C, None)
-    add_transition.assert_any_call(B, StateOn('sensor.t'), C, None)
+    add_transition.assert_any_call(A, trigger1, C, None)
+    add_transition.assert_any_call(B, trigger1, C, None)
+    add_transition.assert_any_call(A, trigger2, C, None)
+    add_transition.assert_any_call(B, trigger2, C, None)
     self.assertEqual(add_transition.call_count, 4)
 
   def test_one_transition_callback(self):
