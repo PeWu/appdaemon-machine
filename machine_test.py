@@ -5,7 +5,7 @@ from enum import Enum
 from unittest import main, TestCase
 from unittest.mock import patch, Mock
 
-from machine import Machine, ANY, StateEq, StateNeq, StateOn, StateOff, Timeout
+from machine import Machine, ANY, StateEq, StateNeq, StateOn, StateOff, StateIs, Timeout
 
 
 Timer = namedtuple('Timer', ['call_time', 'callback'])
@@ -224,6 +224,17 @@ class MachineTest(TestCase):
     """If a trigger condition is already met when entering a new state,
     immediately perform the transition."""
     self.machine.add_transition(A, StateOff('sensor.s'), B)
+    self.assertEqual(self.machine.current_state, B)
+
+  def test_lambda_state_trigger(self):
+    self.machine.add_transition(
+        A, StateIs('sensor.i', lambda v: int(v) > 5), B)
+    self.assertEqual(self.machine.current_state, A)
+
+    self.hass.set_state('sensor.i', '3')
+    self.assertEqual(self.machine.current_state, A)
+
+    self.hass.set_state('sensor.i', '6')
     self.assertEqual(self.machine.current_state, B)
 
 

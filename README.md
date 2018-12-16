@@ -124,9 +124,9 @@ StateOn('binary_sensor.sensor1')
 StateOff('binary_sensor.sensor2')
 StateEq('device_tracker.device1', 'home')
 StateNeq('device_tracker.device2', 'home')
+StateIs('sensor.temperature', lambda t: int(t) < 20)
 Timeout(10) # seconds
 ```
 
 ## Not supported yet
 * Setting the state explicitly from code, e.g. `machine.set_state(HOME)`.
-* Arbitrary predicates, e.g. `temperature < 20`. You can create a template sensor in Home Assistant as a workaround.

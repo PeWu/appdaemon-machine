@@ -65,15 +65,21 @@ class StateIs(Trigger):
   def activate(self):
     self.active = True
     entity_state = self.hass.get_state(self.entity)
-    return self.state_predicate(entity_state)
+    return self._test_predicate(entity_state)
 
   def suspend(self):
     self.active = False
 
+  def _test_predicate(self, entity_state):
+    try:
+      return self.state_predicate(entity_state)
+    except Exception:
+      return False
+
   def _state_callback(
       self, unused_entity, unused_attribute, unused_old,
       new, unused_kwargs):
-    if self.active and self.state_predicate(new):
+    if self.active and self._test_predicate(new):
       self.trigger_callback()
 
 
