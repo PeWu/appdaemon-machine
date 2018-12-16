@@ -129,6 +129,4 @@ Timeout(10) # seconds
 
 ## Not supported yet
 * Setting the state explicitly from code, e.g. `machine.set_state(HOME)`.
-* Setting the state by changing the input in Home Assistant. The state machine will not notice the change now.
-* Immediate state changes. E.g. State `A` transitions to `B` and the condition to transition to state `C` is already met. The state machine will not immediately transition to state `C` without an explicit change in the state that triggers the transition.
 * Arbitrary predicates, e.g. `temperature < 20`. You can create a template sensor in Home Assistant as a workaround.
