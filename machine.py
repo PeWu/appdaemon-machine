@@ -4,6 +4,7 @@ Repository: https://github.com/PeWu/appdaemon-machine
 """
 
 from collections import defaultdict, namedtuple
+from copy import copy
 from enum import Enum
 from functools import partial
 from urllib.parse import quote
@@ -256,6 +257,11 @@ class Machine:
         'Invalid state: {}'.format(to_state))
     assert not isinstance(trigger, list), 'Use add_transitions()'
     assert isinstance(trigger, Trigger), 'Invalid trigger'
+
+    # Create a copy of the trigger object in case the same object is used to
+    # create multiple transitions. One trigger object may only be used in one
+    # transition.
+    trigger = copy(trigger)
 
     transition = Transition(trigger, to_state, on_transition)
     self.transitions[from_state].append(transition)

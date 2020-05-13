@@ -165,6 +165,12 @@ class MachineTest(TestCase):
     add_transition.assert_any_call(C, trigger, A, None)
     self.assertEqual(add_transition.call_count, 3)
 
+  def test_from_any_transition(self):
+    self.machine.add_transitions(ANY, StateOn('sensor.s'), B)
+
+    self.hass.set_state('sensor.s', 'on')
+    self.assertEqual(self.machine.current_state, B)
+
   def test_from_state_list(self):
     trigger = Timeout(1)
     with patch.object(self.machine, 'add_transition') as add_transition:
