@@ -134,9 +134,9 @@ class Timeout(Trigger):
     self.timer = self.hass.run_in(self._timer_callback, self.timeout_sec)
 
   def suspend(self):
-    if self.timer:
+    if self.hass.timer_running(self.timer):
       self.hass.cancel_timer(self.timer)
-      self.timer = None
+    self.timer = None
 
   def _timer_callback(self, unused_kwargs):
     self.trigger_callback()
