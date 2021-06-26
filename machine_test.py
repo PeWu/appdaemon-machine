@@ -45,6 +45,9 @@ class FakeHass:
   def cancel_timer(self, key):
     self.timers.pop(key, None)
 
+  def timer_running(self, key):
+    return key in self.timers
+
   def advance_time(self, seconds):
     self.current_time += seconds
     callbacks_to_run = []
